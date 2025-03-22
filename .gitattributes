@@ -294,3 +294,9 @@
 /node_modules/wide-align/LICENSE filter=lfs diff=lfs merge=lfs -text
 /node_modules/wrappy/LICENSE filter=lfs diff=lfs merge=lfs -text
 /node_modules/yallist/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/basic-auth/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/basic-auth/node_modules/safe-buffer/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/cors/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/morgan/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/morgan/node_modules/on-finished/LICENSE filter=lfs diff=lfs merge=lfs -text
+/node_modules/on-headers/LICENSE filter=lfs diff=lfs merge=lfs -text
