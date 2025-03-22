@@ -1,11 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order'); // Adjust the path to your Order model
+const Order = require('../models/Order');
+const User = require('../models/User');
 
-// GET all orders
+// GET all orders (admin only)
 router.get('/', async (req, res) => {
     try {
-        const orders = await Order.find().populate('products.product'); // Populate product details if referenced
+        const orders = await Order.find()
+            .populate('userId', 'username email')
+            .populate('items.productId', 'name price');
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET user's orders
+router.get('/my-orders', async (req, res) => {
+    try {
+        const userId = req.body.userId; // In production, get this from JWT token
+        const orders = await Order.find({ userId })
+            .populate('items.productId', 'name price');
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -15,7 +30,9 @@ router.get('/', async (req, res) => {
 // GET a single order by ID
 router.get('/:id', async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id).populate('products.product');
+        const order = await Order.findById(req.params.id)
+            .populate('userId', 'username email')
+            .populate('items.productId', 'name price');
         if (!order) return res.status(404).json({ message: 'Order not found' });
         res.json(order);
     } catch (error) {
@@ -25,14 +42,22 @@ router.get('/:id', async (req, res) => {
 
 // POST a new order
 router.post('/', async (req, res) => {
-    const order = new Order({
-        customerName: req.body.customerName,
-        products: req.body.products, // Array of { product: productId, quantity: number }
-        totalAmount: req.body.totalAmount,
-        status: req.body.status || 'Pending',
-    });
-
     try {
+        const { userId, items, totalPrice } = req.body;
+
+        // Verify user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const order = new Order({
+            userId,
+            items,
+            totalPrice,
+            status: 'pending'
+        });
+
         const newOrder = await order.save();
         res.status(201).json(newOrder);
     } catch (error) {
@@ -40,16 +65,15 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT (update) an order by ID
+// PUT (update) an order by ID (admin only)
 router.put('/:id', async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'Order not found' });
 
-        order.customerName = req.body.customerName || order.customerName;
-        order.products = req.body.products || order.products;
-        order.totalAmount = req.body.totalAmount || order.totalAmount;
-        order.status = req.body.status || order.status;
+        if (req.body.status) {
+            order.status = req.body.status;
+        }
 
         const updatedOrder = await order.save();
         res.json(updatedOrder);
@@ -58,13 +82,13 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE an order by ID
+// DELETE an order by ID (admin only)
 router.delete('/:id', async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'Order not found' });
 
-        await order.remove();
+        await order.deleteOne();
         res.json({ message: 'Order deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
