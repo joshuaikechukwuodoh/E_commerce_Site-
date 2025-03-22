@@ -2,6 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
+// Import routes
+const authRoute = require('./routes/auth');
+const productRoute = require('./routes/product');
+const orderRoute = require('./routes/order');
+
+
+
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -18,10 +26,11 @@ mongoose.connect(process.env.MONGO_URI, {
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// route to test the server
-app.get('/', (req, res) => {
-    res.send('E-commerce Backend is running!');
-});
+
+// Use routes
+app.use('/api/auth', authRoute);
+app.use('/api/product', productRoute);
+app.use('/api/order', orderRoute);
 
 // Define the port
 const PORT = process.env.PORT || 5000;
